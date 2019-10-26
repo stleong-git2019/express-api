@@ -31,7 +31,7 @@ app.get('/', function (req, res) {
 // connection configurations
 var dbConn = mysql.createConnection({
     host: 'localhost',
-    port: '3307',
+    port: '3306',
     user: 'root',
     password: 'localhost123$%',
     database: 'node_express'
@@ -99,10 +99,18 @@ app.post('/user', function (req, res) {
     }
     let passwordHash = 'SHA(CONCAT("hidden",'+dbConn.escape(password)+',"'+password_key+'"))';
   
-    dbConn.query("INSERT INTO users SET ? ,user_pwd="+passwordHash, { name: name ,email: email,user_pwd_key:password_key }, function (error, results, fields) {
-        if (error) throw error;
-        return res.send({ error: false, message: 'New user has been created successfully.'+passwordHash });
+  
+    dbConn.query(' SELECT name FROM users WHERE  email=?', [email], function (error, results, fields) {
+		if (results.length>0) 
+			return res.send({ error: 'Duplicate Email',message: 'Duplicate Email' });
+		else{
+			dbConn.query("INSERT INTO users SET ? ,user_pwd="+passwordHash, { name: name ,email: email,user_pwd_key:password_key }, function (error, results, fields) {
+				if (error) throw error;
+				return res.send({ error: false, message: 'New user has been created successfully.' });
+			});
+		}
     });
+	
 });
  
  
